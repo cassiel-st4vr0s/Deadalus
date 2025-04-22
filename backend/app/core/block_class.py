@@ -2,7 +2,6 @@ import hashlib
 import json
 from ecdsa import VerifyingKey, BadSignatureError
 
-
 class Transaction:
     def __init__(self, sender, recipient, amount, signature=None, public_key=None):
         self.sender = sender

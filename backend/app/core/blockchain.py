@@ -1,6 +1,5 @@
 import time
-from block_class import Block, Transaction
-
+from .block_class import Block
 
 class Blockchain:
     def __init__(self, difficulty=2):

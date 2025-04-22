@@ -1,10 +1,11 @@
 import subprocess
 import time
+#import os
 
 def run_node(port):
     return subprocess.Popen(
-        ["uvicorn", "blockchain_enhanced_full:app", "--reload", "--port", str(port)],
-        cwd=".",
+        ["uvicorn", "app.main:app", "--reload", "--port", str(port)],
+        cwd="backend", #Localização do App
     )
 
 if __name__ == "__main__":
