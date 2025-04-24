@@ -1,12 +1,19 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from core.blockchain import Blockchain
-from routers import artworks as artworks_router
-from routers import tokens as tokens_router
-from routers import users as users_router
-from routers import transaction as transaction_router
-from routers import peers as peers_router
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
+from core.blockchain import Blockchain
+from routers import (
+    artworks as artworks_router,
+    tokens as tokens_router,
+    users as users_router,
+    transaction as transaction_router,
+    peers as peers_router,
+)
+
+import os
 
 app = FastAPI(
     title="Deadalus DApp",
@@ -14,36 +21,67 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# habilitando CORS
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # restrinjir para ["http://localhost:8000"] se necessário
+    allow_origins=["http://localhost:8000", "http://127.0.0.1:8000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Compartilhar objetos entre rotas
+app.state.blockchain = Blockchain()
 app.state.peers = set()
 
-# instânciando a blockchain que será compartilhada entre as rotas
-blockchain = Blockchain()
+# Static & Templates
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
-# expor blockchain para uso nos endpoints via app state
-app.state.blockchain = blockchain
-
-
-@app.get("/")
-def root():
-    return FileResponse("static/webui.html")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 
-# status check do DApp e da blockchain
+# Home Page
+@app.get("/", include_in_schema=False)
+def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+# Views
+@app.get("/upload", include_in_schema=False)
+def upload_view(request: Request):
+    return templates.TemplateResponse("upload_form.html", {"request": request})
+
+
+@app.get("/user", include_in_schema=False)
+def user_view(request: Request):
+    return templates.TemplateResponse("user_form.html", {"request": request})
+
+
+@app.get("/transacao", include_in_schema=False)
+def tx_view(request: Request):
+    return templates.TemplateResponse("tx_form.html", {"request": request})
+
+
+@app.get("/cadeia", include_in_schema=False)
+def chain_view(request: Request):
+    return templates.TemplateResponse("chain_view.html", {"request": request})
+
+
+@app.get("/token", include_in_schema=False)
+def token_view(request: Request):
+    return templates.TemplateResponse("token_view.html", {"request": request})
+
+
+# Health Check
 @app.get("/health", tags=["status"])
 def health_check():
     return {"status": "ok", "blocks": len(app.state.blockchain.blocks)}
 
 
-# Registro dos routers (controllers)
+# Routers
 app.include_router(users_router.router, prefix="/users", tags=["users"])
 app.include_router(artworks_router.router, prefix="/artworks", tags=["artworks"])
 app.include_router(tokens_router.router, prefix="/tokens", tags=["tokens"])
@@ -52,7 +90,7 @@ app.include_router(
 )
 app.include_router(peers_router.router, prefix="/peers", tags=["peers"])
 
-# ponto de entrada para execução (uvicorn app.main:app)
+# Execução local direta
 if __name__ == "__main__":
     import uvicorn
 

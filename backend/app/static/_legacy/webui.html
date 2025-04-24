@@ -213,16 +213,19 @@
       formData.append("author_id", authorId);
 
       try {
-        const response = await axios.post(`${API_URL}/artworks`, formData, {
+        const response = await axios.post(`${API_URL}/artworks/`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
+
+        const data = response.data;
         document.getElementById("uploadResult").textContent =
-          "Obra registrada:\n" + JSON.stringify(response.data, null, 2);
+          `Obra registrada com sucesso!\nID: ${data.artwork_id}\nTx Data:\n${data.tx_data}`;
       } catch (error) {
         document.getElementById("uploadResult").textContent =
-          error.response?.data?.detail || "Erro ao enviar obra.";
+          error.response?.data?.detail || "❌ Erro ao enviar obra.";
       }
     }
+
   </script>
 </head>
 

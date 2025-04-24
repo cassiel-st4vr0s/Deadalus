@@ -1,0 +1,48 @@
+{% extends "base.html" %} {% block title %}Registrar Usuário{% endblock %} {%
+block content %}
+<h2 class="text-xl font-semibold mb-4">👤 Registro de Usuário</h2>
+<form id="userForm" class="grid grid-cols-2 gap-4 mt-2">
+  <label
+    >Nome:
+    <input
+      type="text"
+      id="userName"
+      class="w-full mt-1 p-2 border rounded"
+      placeholder="Ex: Ana Artista"
+    />
+  </label>
+  <label
+    >Email (opcional):
+    <input type="email" id="userEmail" class="w-full mt-1 p-2 border rounded" />
+  </label>
+  <div class="col-span-2">
+    <button
+      type="button"
+      onclick="registerUser()"
+      class="bg-blue-600 text-white px-4 py-2 rounded mt-2"
+    >
+      Registrar Usuário
+    </button>
+  </div>
+</form>
+<pre id="userResult" class="bg-gray-200 p-3 rounded overflow-auto mt-4"></pre>
+
+<script>
+  async function registerUser() {
+    const name = document.getElementById("userName").value;
+    const email = document.getElementById("userEmail").value;
+    if (!name) return alert("O campo nome é obrigatório!");
+    try {
+      const response = await axios.post("/users/register", { name, email });
+      document.getElementById("userResult").textContent = JSON.stringify(
+        response.data,
+        null,
+        2
+      );
+    } catch (error) {
+      document.getElementById("userResult").textContent =
+        error.response?.data?.detail || "Erro ao registrar usuário.";
+    }
+  }
+</script>
+{% endblock %}

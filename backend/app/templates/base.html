@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{% block title %}Deadalus DApp{% endblock %}</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+  <body class="bg-gray-100 p-6">
+    <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-md p-6">
+      <h1 class="text-2xl font-bold mb-4">
+        Deadalus — Registro & Tokenização de Obras
+      </h1>
+
+      <nav class="mb-6 flex gap-4">
+        <a href="/" class="text-blue-600 hover:underline">Início</a>
+        <a href="/user" class="text-blue-600 hover:underline">Usuário</a>
+        <a href="/upload" class="text-blue-600 hover:underline"
+          >Upload de Obra</a
+        >
+        <a href="/transacao" class="text-blue-600 hover:underline">Transação</a>
+        <a href="/cadeia" class="text-blue-600 hover:underline">Blockchain</a>
+        <a href="/token" class="text-blue-600 hover:underline">Token</a>
+      </nav>
+
+      {% block content %}{% endblock %}
+    </div>
+  </body>
+</html>

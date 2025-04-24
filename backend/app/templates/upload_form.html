@@ -1,0 +1,77 @@
+{% extends "base.html" %} {% block title %}Upload de Obra{% endblock %} {% block
+content %}
+<h2 class="text-xl font-semibold mb-4">🖼️ Upload de Obra Digital</h2>
+<form id="uploadForm" enctype="multipart/form-data" class="space-y-4">
+  <input
+    type="file"
+    id="fileInput"
+    accept=".png,.jpg,.jpeg,.pdf"
+    class="block w-full"
+    required
+  />
+  <input
+    type="text"
+    id="title"
+    placeholder="Título"
+    class="w-full border p-2"
+    required
+  />
+  <input
+    type="text"
+    id="description"
+    placeholder="Descrição"
+    class="w-full border p-2"
+    required
+  />
+  <input
+    type="number"
+    id="authorId"
+    placeholder="ID do Autor"
+    class="w-full border p-2"
+    required
+  />
+  <button
+    type="button"
+    class="bg-blue-600 text-white px-4 py-2 rounded"
+    onclick="uploadArtwork()"
+  >
+    Registrar Obra
+  </button>
+</form>
+<pre id="uploadResult" class="mt-4 bg-gray-100 p-3 rounded"></pre>
+
+<script>
+  async function uploadArtwork() {
+    const file = document.getElementById("fileInput").files[0];
+    const title = document.getElementById("title").value;
+    const description = document.getElementById("description").value;
+    const authorId = document.getElementById("authorId").value;
+
+    if (!file || !title || !description || !authorId) {
+      alert("Preencha todos os campos!");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("author_id", authorId);
+
+    try {
+      const response = await axios.post("/artworks/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      document.getElementById("uploadResult").textContent = JSON.stringify(
+        response.data,
+        null,
+        2
+      );
+    } catch (err) {
+      document.getElementById("uploadResult").textContent =
+        err.response?.data?.detail || "Erro ao registrar obra.";
+    }
+  }
+</script>
+
+{% endblock %}

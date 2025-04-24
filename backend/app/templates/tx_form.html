@@ -1,0 +1,134 @@
+{% extends "base.html" %} {% block title %}Transações{% endblock %} {% block
+content %}
+<h2 class="text-xl font-semibold mb-4">🔏 Transações</h2>
+
+<!-- 1. Assinar Transação -->
+<h3 class="font-semibold mt-4">1. Assinar Transação</h3>
+<textarea
+  id="txData"
+  class="w-full border p-2"
+  rows="3"
+  placeholder='{"sender":"...","recipient":"...","amount":10.0}'
+></textarea>
+<textarea
+  id="privateKeyTx"
+  class="w-full border p-2 mt-2"
+  rows="3"
+  placeholder="Chave Privada"
+></textarea>
+<button
+  onclick="signTransaction()"
+  class="bg-yellow-500 text-white px-4 py-2 rounded mt-2"
+>
+  Assinar
+</button>
+<pre id="signatureResult" class="bg-gray-100 p-2 rounded mt-2"></pre>
+
+<hr class="my-6" />
+
+<!-- 2. Enviar Transação -->
+<h3 class="font-semibold">2. Enviar Transação</h3>
+<input
+  type="text"
+  id="senderTx"
+  placeholder="Sender"
+  class="w-full border p-2"
+/>
+<input
+  type="text"
+  id="recipientTx"
+  placeholder="Recipient"
+  class="w-full border p-2 mt-2"
+/>
+<input
+  type="number"
+  id="amountTx"
+  placeholder="Amount"
+  class="w-full border p-2 mt-2"
+/>
+<textarea
+  id="signatureTx"
+  class="w-full border p-2 mt-2"
+  rows="2"
+  placeholder="Signature"
+></textarea>
+<textarea
+  id="publicKeyTx"
+  class="w-full border p-2 mt-2"
+  rows="3"
+  placeholder="Public Key"
+></textarea>
+<button
+  onclick="sendTransaction()"
+  class="bg-green-600 text-white px-4 py-2 rounded mt-2"
+>
+  Enviar
+</button>
+<pre id="sendResult" class="bg-gray-100 p-2 rounded mt-2"></pre>
+
+<hr class="my-6" />
+
+<!-- 3. Mineração -->
+<h3 class="font-semibold">3. Mineração</h3>
+<button
+  onclick="mineBlock()"
+  class="bg-purple-600 text-white px-4 py-2 rounded"
+>
+  Minerar Bloco
+</button>
+<pre id="mineResult" class="bg-gray-100 p-2 rounded mt-2"></pre>
+
+<script>
+  async function signTransaction() {
+    const txData = document.getElementById("txData").value;
+    const privateKey = document.getElementById("privateKeyTx").value;
+    try {
+      const resp = await axios.post("/transaction/sign", {
+        tx_data: txData,
+        private_key: privateKey,
+      });
+      document.getElementById("signatureResult").textContent =
+        resp.data.signature;
+      document.getElementById("signatureTx").value = resp.data.signature;
+    } catch (err) {
+      document.getElementById("signatureResult").textContent =
+        err.response?.data?.detail || "Erro ao assinar";
+    }
+  }
+
+  async function sendTransaction() {
+    const payload = {
+      sender: document.getElementById("senderTx").value,
+      recipient: document.getElementById("recipientTx").value,
+      amount: parseFloat(document.getElementById("amountTx").value),
+      signature: document.getElementById("signatureTx").value,
+      public_key: document.getElementById("publicKeyTx").value,
+    };
+    try {
+      const resp = await axios.post("/transaction/send", payload);
+      document.getElementById("sendResult").textContent = JSON.stringify(
+        resp.data,
+        null,
+        2
+      );
+    } catch (err) {
+      document.getElementById("sendResult").textContent =
+        err.response?.data?.detail || "Erro ao enviar";
+    }
+  }
+
+  async function mineBlock() {
+    try {
+      const resp = await axios.post("/transaction/mine");
+      document.getElementById("mineResult").textContent = JSON.stringify(
+        resp.data,
+        null,
+        2
+      );
+    } catch (err) {
+      document.getElementById("mineResult").textContent =
+        err.response?.data?.detail || "Erro ao minerar";
+    }
+  }
+</script>
+{% endblock %}
