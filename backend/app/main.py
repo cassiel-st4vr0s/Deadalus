@@ -12,6 +12,7 @@ app = FastAPI(
     description="DApp para registro e autenticação de obras digitais",
     version="0.1.0",
 )
+app.state.peers = set()
 
 # habilitando CORS
 app.add_middleware(
