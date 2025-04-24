@@ -6,13 +6,13 @@ from routers import tokens as tokens_router
 from routers import users as users_router
 from routers import transaction as transaction_router
 from routers import peers as peers_router
+from fastapi.responses import FileResponse
 
 app = FastAPI(
     title="Deadalus DApp",
     description="DApp para registro e autenticação de obras digitais",
     version="0.1.0",
 )
-app.state.peers = set()
 
 # habilitando CORS
 app.add_middleware(
@@ -23,11 +23,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.state.peers = set()
+
 # instânciando a blockchain que será compartilhada entre as rotas
 blockchain = Blockchain()
 
 # expor blockchain para uso nos endpoints via app state
 app.state.blockchain = blockchain
+
+
+@app.get("/")
+def root():
+    return FileResponse("static/webui.html")
 
 
 # status check do DApp e da blockchain
