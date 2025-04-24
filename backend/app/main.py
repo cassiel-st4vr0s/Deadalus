@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-#from core.block_class import Block, Transaction
 from core.blockchain import Blockchain
-#from routers import artworks as artworks_router
+from routers import artworks as artworks_router
 #from routers import tokens as tokens_router
 from routers import users as users_router
 from routers import transaction as transaction_router
@@ -36,7 +35,7 @@ def health_check():
 
 #Registro dos routers (controllers)
 app.include_router(users_router.router, prefix="/users", tags=["users"])
-#app.include_router(artworks_router.router, prefix="/artworks", tags=["artworks"])
+app.include_router(artworks_router.router, prefix="/artworks", tags=["artworks"])
 #app.include_router(tokens_router.router, prefix="/tokens", tags=["tokens"])
 app.include_router(transaction_router.router, prefix="/transaction", tags=["transaction"])
 app.include_router(peers_router.router, prefix="/peers", tags=["peers"])
