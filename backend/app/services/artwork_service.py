@@ -8,11 +8,11 @@ DB_PATH = Path(__file__).resolve().parents[1] / "database.sqlite3"
 def insert_artwork(author_id: int, file_hash: str, title: str, description: str) -> int:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+    now_utc_iso = datetime.now(timezone.utc).isoformat()
     cursor.execute("""
         INSERT INTO artworks (author_id, hash, title, description, created_at)
         VALUES (?, ?, ?, ?, ?)
-    """, (author_id, file_hash, title, description, datetime.now(datetime.timezone.utc).isoformat()
-))
+    """, (author_id, file_hash, title, description, now_utc_iso))
     artwork_id = cursor.lastrowid
     conn.commit()
     conn.close()

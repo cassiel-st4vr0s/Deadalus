@@ -23,7 +23,7 @@ app.add_middleware(
 )
 
 #instânciando a blockchain que será compartilhada entre as rotas
-blockchain = Blockchain(difficulty=2)
+blockchain = Blockchain()
 
 #expor blockchain para uso nos endpoints via app state
 app.state.blockchain = blockchain

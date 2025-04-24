@@ -1,17 +1,18 @@
 import sqlite3
 from pathlib import Path
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 DB_PATH = Path(__file__).resolve().parents[1] / "database.sqlite3"
 
 def insert_user(name: str, public_key: str) -> int:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+    now_utc_iso = datetime.now(timezone.utc).isoformat()
     cursor.execute("""
         INSERT INTO users (name, public_key, registered_at)
         VALUES (?, ?, ?)
-    """, (name, public_key, datetime.utcnow().isoformat()))
+    """, (name, public_key, now_utc_iso))
     user_id = cursor.lastrowid
     conn.commit()
     conn.close()

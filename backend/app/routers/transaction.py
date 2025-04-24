@@ -6,27 +6,34 @@ from ecdsa import SigningKey
 
 router = APIRouter()
 
-
-@router.post("/sign")
-def sign_data(data: SignData):
+@router.post("/sign", response_model=dict)
+def sign_transaction(data: SignData):
+    """
+    RF04: Assinatura de Transação
+    """
     sk = SigningKey.from_pem(data.private_key.encode())
-    signature = sk.sign(data.tx_data.encode())
-    return {"signature": signature.hex()}
+    signature = sk.sign(data.tx_data.encode()).hex()
+    return {"signature": signature}
 
-
-@router.post("/send")
-def add_transaction(tx: TransactionData, blockchain=Depends(get_blockchain)):
-    transaction = Transaction(**tx.dict())
+@router.post("/send", response_model=dict)
+def send_transaction(tx: TransactionData, blockchain=Depends(get_blockchain)):
+    """
+    RF05: Envio de Transação ao Nó
+    """
+    transaction = Transaction(**tx.model_dump())
     if not transaction.is_valid():
         raise HTTPException(status_code=400, detail="Transação inválida")
     blockchain.add_transaction(transaction)
-    return {"message": "Transação adicionada"}
+    return {"message": "Transação adicionada ao pool"}
 
-
-@router.post("/mine")
-def mine(blockchain=Depends(get_blockchain)):
-    if not blockchain.transaction_pool:
-        return {"message": "Nenhuma transação para minerar"}
+@router.post("/mine", response_model=dict)
+def mine_block(blockchain=Depends(get_blockchain)):
+    """
+    RF06: Mineração de Blocos
+    """
+    #blockchain em Node8000 usa attribute transaction_pool
+    if not getattr(blockchain, 'transaction_pool', None):
+        raise HTTPException(status_code=400, detail="Nenhuma transação para minerar")
     block = blockchain.mine_block()
     return {"message": "Bloco minerado", "block": block.to_dict()}
 
