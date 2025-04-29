@@ -1,43 +1,17 @@
-{% extends "base.html" %} {% block title %}Upload de Obra{% endblock %} {% block
-content %}
+{% extends "base.html" %}
+{% block title %}Upload de Obra{% endblock %}
+{% block content %}
+
 <h2 class="text-xl font-semibold mb-4">🖼️ Upload de Obra Digital</h2>
 <form id="uploadForm" enctype="multipart/form-data" class="space-y-4">
-  <input
-    type="file"
-    id="fileInput"
-    accept=".png,.jpg,.jpeg,.pdf"
-    class="block w-full"
-    required
-  />
-  <input
-    type="text"
-    id="title"
-    placeholder="Título"
-    class="w-full border p-2"
-    required
-  />
-  <input
-    type="text"
-    id="description"
-    placeholder="Descrição"
-    class="w-full border p-2"
-    required
-  />
-  <input
-    type="number"
-    id="authorId"
-    placeholder="ID do Autor"
-    class="w-full border p-2"
-    required
-  />
-  <button
-    type="button"
-    class="bg-blue-600 text-white px-4 py-2 rounded"
-    onclick="uploadArtwork()"
-  >
+  <input type="file" id="fileInput" accept=".png,.jpg,.jpeg,.pdf" class="block w-full" required />
+  <input type="text" id="title" placeholder="Título" class="w-full border p-2" required />
+  <input type="text" id="description" placeholder="Descrição" class="w-full border p-2" required />
+  <button type="button" class="bg-blue-600 text-white px-4 py-2 rounded" onclick="uploadArtwork()">
     Registrar Obra
   </button>
 </form>
+
 <pre id="uploadResult" class="mt-4 bg-gray-100 p-3 rounded"></pre>
 
 <script>
@@ -45,10 +19,19 @@ content %}
     const file = document.getElementById("fileInput").files[0];
     const title = document.getElementById("title").value;
     const description = document.getElementById("description").value;
-    const authorId = document.getElementById("authorId").value;
 
-    if (!file || !title || !description || !authorId) {
+    if (!file || !title || !description) {
       alert("Preencha todos os campos!");
+      return;
+    }
+
+    let authorId;
+    try {
+      authorId = localStorage.getItem("user_id");
+      if (!authorId) throw new Error("ID não encontrado");
+    } catch (err) {
+      document.getElementById("uploadResult").textContent =
+        "Erro ao obter informações do usuário.";
       return;
     }
 

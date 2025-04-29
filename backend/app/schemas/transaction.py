@@ -1,7 +1,9 @@
 from pydantic import BaseModel
 
 class SignData(BaseModel):
-    tx_data: str
+    sender: str
+    recipient: str
+    amount: float
     private_key: str
 
 class TransactionData(BaseModel):

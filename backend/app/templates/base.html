@@ -1,35 +1,61 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <title>{% block title %}Deadalus DApp{% endblock %}</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  </head>
-  <body class="bg-gray-100">
-    <nav class="bg-blue-800 text-white px-6 py-4 shadow-md mb-6">
-      <div class="max-w-7xl mx-auto flex justify-between items-center">
-        <h1 class="text-xl font-bold">Deadalus DApp</h1>
-        <div class="space-x-4">
-          <a href="/" class="hover:underline">Início</a>
-          <a href="/user" class="hover:underline">Usuário</a>
-          <a href="/upload" class="hover:underline">Upload de Obra</a>
-          <a href="/transacao" class="hover:underline">Transação</a>
-          <a href="/cadeia" class="hover:underline">Blockchain</a>
-          <a href="/token" class="hover:underline">Token</a>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}Deadalus DApp{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body class="bg-gray-100">
+  <nav class="bg-blue-800 text-white px-6 py-4 shadow-md mb-6">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <h1 class="text-xl font-bold">Deadalus DApp</h1>
+      <div class="flex items-center space-x-4">
+        <a href="/" class="hover:underline">Início</a>
+        <a href="/user" class="hover:underline">Usuário</a>
+        <a href="/upload" class="hover:underline">Upload de Obra</a>
+        <a href="/transacao" class="hover:underline">Transação</a>
+        <a href="/cadeia" class="hover:underline">Blockchain</a>
+        <a href="/token" class="hover:underline">Token</a>
+
+        <!-- Área do usuário -->
+        <div id="user-info" class="ml-6 text-sm font-medium hidden">
+          <span id="user-id" class="text-white"></span>
+          <span id="wallet-balance" class="text-green-300 ml-2"></span>
+          <button onclick="logout()" class="ml-2 text-red-300 hover:underline">Sair</button>
         </div>
       </div>
-    </nav>
-
-    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-md p-6">
-      <h1 class="text-2xl font-bold mb-4">
-        Deadalus — Registro & Tokenização de Obras
-      </h1>
-
-      {% block content %}{% endblock %}
     </div>
-  </body>
+  </nav>
+
+  <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-md p-6">
+    <h1 class="text-2xl font-bold mb-4">
+      Deadalus — Registro & Tokenização de Obras
+    </h1>
+    {% block content %}{% endblock %}
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const userName = localStorage.getItem("user_name");
+      const walletBalance = localStorage.getItem("wallet_balance");
+
+      if (userName && walletBalance !== null) {
+        // Aqui é onde o nome correto será exibido
+        document.getElementById("user-id").textContent = `👤 ${userName}`;
+        document.getElementById("wallet-balance").textContent = `| ${walletBalance} moedas`;
+        document.getElementById("user-info").classList.remove("hidden");
+      }
+    });
+
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = "/";
+    }
+  </script>
+</body>
+
 </html>

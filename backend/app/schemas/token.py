@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 class TokenMint(BaseModel):
     artwork_id: int = Field(..., gt=0)
-    owner_id: int = Field(..., gt=0)
+    price_tokens: int = Field(..., gt=0)
 
 
 class TokenRead(BaseModel):

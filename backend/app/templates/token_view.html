@@ -1,27 +1,38 @@
-{% extends "base.html" %} {% block title %}Tokens{% endblock %} {% block content
-%}
+{% extends "base.html" %} 
+{% block title %}Tokens{% endblock %} 
+{% block content %}
 <h2 class="text-xl font-semibold mb-4">💰 Tokenização de Obras</h2>
 
 <!-- Emitir Token -->
 <h3 class="font-semibold">1. Emitir Token</h3>
+
+<!-- Dropdown para selecionar obra -->
+<select id="mintArtworkId" class="w-full border p-2 mt-2">
+  <option value="" disabled selected>Escolha uma obra</option>
+</select>
+
+<!-- Campo para o preço do token -->
 <input
   type="number"
-  id="mintArtworkId"
-  placeholder="Artwork ID"
+  id="priceTokens"
+  placeholder="Preço do Token (em tokens)"
   class="w-full border p-2 mt-2"
 />
+
+<!-- Owner ID preenchido automaticamente -->
 <input
-  type="number"
+  type="hidden"
   id="mintOwnerId"
-  placeholder="Owner ID"
   class="w-full border p-2 mt-2"
 />
+
 <button
   onclick="mintToken()"
   class="bg-teal-700 text-white px-4 py-2 rounded mt-2"
 >
   Emitir Token
 </button>
+
 <pre id="mintResult" class="bg-gray-100 p-2 rounded mt-2"></pre>
 
 <hr class="my-6" />
@@ -43,19 +54,54 @@
 <pre id="queryResult" class="bg-gray-100 p-2 rounded mt-2"></pre>
 
 <script>
+  async function loadArtworks() {
+    const authorId = localStorage.getItem("user_id");
+    console.log("ID do autor carregado do localStorage:", authorId);
+
+    if (!authorId) {
+      alert("ID do usuário não encontrado.");
+      return;
+    }
+
+    document.getElementById("mintOwnerId").value = authorId;
+
+    try {
+      const resp = await axios.get(`/artworks/author/${authorId}`);
+      const artworks = resp.data;
+
+      const select = document.getElementById("mintArtworkId");
+      // Limpa opções antigas
+      select.innerHTML = '<option value="" disabled selected>Escolha uma obra</option>';
+
+      artworks.forEach(artwork => {
+        const option = document.createElement("option");
+        option.value = artwork.id;
+        option.textContent = `${artwork.title} (${artwork.id})`;
+        select.appendChild(option);
+      });
+    } catch (err) {
+      console.error("Erro ao carregar obras:", err);
+      alert("Erro ao carregar obras.");
+    }
+  }
+
   async function mintToken() {
     const artworkId = parseInt(document.getElementById("mintArtworkId").value);
     const ownerId = parseInt(document.getElementById("mintOwnerId").value);
+    const priceTokens = parseInt(document.getElementById("priceTokens").value);
+
+    if (!artworkId || !ownerId || !priceTokens) {
+      document.getElementById("mintResult").textContent = "Por favor, preencha todos os campos.";
+      return;
+    }
+
     try {
       const resp = await axios.post("/tokens/mint", {
         artwork_id: artworkId,
+        price_tokens: priceTokens,
         owner_id: ownerId,
       });
-      document.getElementById("mintResult").textContent = JSON.stringify(
-        resp.data,
-        null,
-        2
-      );
+      document.getElementById("mintResult").textContent = JSON.stringify(resp.data, null, 2);
     } catch (err) {
       document.getElementById("mintResult").textContent =
         err.response?.data?.detail || "Erro ao emitir token.";
@@ -66,15 +112,15 @@
     const tokenId = document.getElementById("queryTokenId").value;
     try {
       const resp = await axios.get(`/tokens/${tokenId}`);
-      document.getElementById("queryResult").textContent = JSON.stringify(
-        resp.data,
-        null,
-        2
-      );
+      document.getElementById("queryResult").textContent = JSON.stringify(resp.data, null, 2);
     } catch (err) {
       document.getElementById("queryResult").textContent =
         err.response?.data?.detail || "Erro ao consultar token.";
     }
   }
+
+  window.onload = async function () {
+    await loadArtworks();
+  };
 </script>
 {% endblock %}

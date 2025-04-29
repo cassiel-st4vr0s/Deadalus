@@ -1,48 +1,164 @@
-{% extends "base.html" %} {% block title %}Registrar Usuário{% endblock %} {%
-block content %}
-<h2 class="text-xl font-semibold mb-4">👤 Registro de Usuário</h2>
-<form id="userForm" class="grid grid-cols-2 gap-4 mt-2">
-  <label
-    >Nome:
-    <input
-      type="text"
-      id="userName"
-      class="w-full mt-1 p-2 border rounded"
-      placeholder="Ex: Ana Artista"
-    />
-  </label>
-  <label
-    >Email (opcional):
-    <input type="email" id="userEmail" class="w-full mt-1 p-2 border rounded" />
-  </label>
-  <div class="col-span-2">
-    <button
-      type="button"
-      onclick="registerUser()"
-      class="bg-blue-600 text-white px-4 py-2 rounded mt-2"
-    >
-      Registrar Usuário
-    </button>
+{% extends "base.html" %} 
+{% block title %}Cadastro ou Login{% endblock %}
+
+{% block content %}
+<h2 class="text-xl font-semibold mb-4">👤 Cadastro ou Login</h2>
+
+<div id="form-container">
+  <!-- Formulário de Cadastro -->
+  <form id="registerForm" class="grid grid-cols-2 gap-4 mt-2">
+    <label>
+      Nome:
+      <input
+        type="text"
+        id="userName"
+        class="w-full mt-1 p-2 border rounded"
+        placeholder="Ex: Ana Artista"
+      />
+    </label>
+    <label>
+      Email:
+      <input
+        type="email"
+        id="userEmail"
+        class="w-full mt-1 p-2 border rounded"
+        placeholder="Ex: ana@exemplo.com"
+      />
+    </label>
+    <label>
+      Senha:
+      <input
+        type="password"
+        id="userPassword"
+        class="w-full mt-1 p-2 border rounded"
+        placeholder="Digite sua senha"
+      />
+    </label>
+    <div class="col-span-2">
+      <button
+        type="button"
+        onclick="registerUser()"
+        class="bg-blue-600 text-white px-4 py-2 rounded mt-2"
+      >
+        Registrar Usuário
+      </button>
+    </div>
+  </form>
+
+  <!-- Formulário de Login -->
+  <form id="loginForm" class="grid grid-cols-2 gap-4 mt-2 hidden">
+    <label>
+      Email:
+      <input
+        type="email"
+        id="loginEmail"
+        class="w-full mt-1 p-2 border rounded"
+        placeholder="Ex: ana@exemplo.com"
+      />
+    </label>
+    <label>
+      Senha:
+      <input
+        type="password"
+        id="loginPassword"
+        class="w-full mt-1 p-2 border rounded"
+        placeholder="Digite sua senha"
+      />
+    </label>
+    <div class="col-span-2">
+      <button
+        type="button"
+        onclick="loginUser()"
+        class="bg-blue-600 text-white px-4 py-2 rounded mt-2"
+      >
+        Entrar
+      </button>
+    </div>
+  </form>
+
+  <div class="col-span-2 text-center mt-4">
+    <p>
+      Já tem uma conta? 
+      <button
+        onclick="toggleForms()"
+        class="text-blue-600"
+      >
+        Faça Login
+      </button>
+    </p>
+    <p>
+      Não tem uma conta? 
+      <button
+        onclick="toggleForms()"
+        class="text-blue-600"
+      >
+        Cadastre-se
+      </button>
+    </p>
   </div>
-</form>
+</div>
+
 <pre id="userResult" class="bg-gray-200 p-3 rounded overflow-auto mt-4"></pre>
 
 <script>
+  // Função para alternar entre os formulários de login e cadastro
+  function toggleForms() {
+    const registerForm = document.getElementById('registerForm');
+    const loginForm = document.getElementById('loginForm');
+    if (registerForm.classList.contains('hidden')) {
+      registerForm.classList.remove('hidden');
+      loginForm.classList.add('hidden');
+    } else {
+      registerForm.classList.add('hidden');
+      loginForm.classList.remove('hidden');
+    }
+  }
+
+  // Função para registrar o usuário
   async function registerUser() {
     const name = document.getElementById("userName").value;
     const email = document.getElementById("userEmail").value;
-    if (!name) return alert("O campo nome é obrigatório!");
+    const password = document.getElementById("userPassword").value;
+
+    if (!name || !email || !password) return alert("Todos os campos são obrigatórios!");
+
     try {
-      const response = await axios.post("/users/register", { name, email });
-      document.getElementById("userResult").textContent = JSON.stringify(
-        response.data,
-        null,
-        2
-      );
+      const response = await axios.post("/users/register", { name, email, password });
+      document.getElementById("userResult").textContent = JSON.stringify(response.data, null, 2);
     } catch (error) {
       document.getElementById("userResult").textContent =
         error.response?.data?.detail || "Erro ao registrar usuário.";
     }
   }
+
+// Função para fazer o login do usuário
+async function loginUser() {
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+
+  if (!email || !password) return alert("Email e senha são obrigatórios!");
+
+  try {
+    const response = await axios.post("/users/login", { email, password });
+
+    const data = response.data;
+    // Salvar no localStorage
+    localStorage.setItem("access_token", data.access_token);
+    localStorage.setItem("user_name", data.user_name); // use 'data.user_name' no lugar de 'data.name'
+    localStorage.setItem("wallet_balance", data.wallet_balance);
+    localStorage.setItem("user_id", data.user_id);
+
+
+    document.getElementById("userResult").textContent = "Login realizado com sucesso!";
+    
+    // Redireciona ou atualiza a página
+    setTimeout(() => window.location.reload(), 500);
+  } catch (error) {
+    document.getElementById("userResult").textContent =
+      error.response?.data?.detail || "Erro ao fazer login.";
+  }
+}
+
 </script>
+
 {% endblock %}

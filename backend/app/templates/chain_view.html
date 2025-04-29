@@ -14,7 +14,7 @@ content %}
     const container = document.getElementById("chainContainer");
     try {
       const resp = await axios.get("/transaction/chain");
-      container.innerHTML = "";
+      container.innerHTML = `<pre>${JSON.stringify(resp.data, null, 2)}</pre>`;
       resp.data.forEach((block) => {
         const div = document.createElement("div");
         div.className = "border p-4 rounded bg-gray-50";
