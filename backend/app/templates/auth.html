@@ -1,0 +1,99 @@
+{% extends "base.html" %} {% block title %}Autenticação{% endblock %} {% block
+content %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+  <!-- Registro de Usuário -->
+  <div class="p-4 border rounded">
+    <h2 class="text-lg font-semibold mb-2">Gerar Novas Chaves / Registrar</h2>
+    <label class="block mb-1">Nome:</label>
+    <input
+      type="text"
+      id="regName"
+      class="w-full p-2 border rounded mb-2"
+      placeholder="Ex: Ana Artista"
+    />
+    <button
+      class="bg-green-600 text-white px-4 py-2 rounded"
+      onclick="register()"
+    >
+      Registrar
+    </button>
+    <pre id="regResult" class="mt-3 bg-gray-100 p-2 rounded text-sm"></pre>
+  </div>
+
+  <!-- Login de Usuário -->
+  <div class="p-4 border rounded">
+    <h2 class="text-lg font-semibold mb-2">Entrar com Chaves Existentes</h2>
+    <label class="block mb-1">Chave Pública:</label>
+    <textarea
+      id="loginPublicKey"
+      rows="3"
+      class="w-full p-2 border rounded mb-2"
+    ></textarea>
+    <button class="bg-blue-600 text-white px-4 py-2 rounded" onclick="login()">
+      Entrar
+    </button>
+    <pre id="loginResult" class="mt-3 bg-gray-100 p-2 rounded text-sm"></pre>
+  </div>
+</div>
+
+<script>
+  // Injeção de header Axios após login
+  function setAuthHeader(publicKey) {
+    axios.defaults.headers.common["X-User-Public-Key"] = publicKey;
+  }
+
+  async function register() {
+    const name = document.getElementById("regName").value.trim();
+    if (!name) return alert("Nome é obrigatório");
+    try {
+      const resp = await axios.post("/users/register", { name });
+      const { user_id, public_key, private_key } = resp.data;
+      // Salvar na sessão
+      sessionStorage.setItem("user_id", user_id);
+      sessionStorage.setItem("public_key", public_key);
+      sessionStorage.setItem("private_key", private_key);
+      setAuthHeader(public_key);
+      document.getElementById(
+        "regResult"
+      ).textContent = `ID: ${user_id}\nPublic Key:\n${public_key}\n\n*** Guarde a Private Key OFFLINE! ***\n${private_key}`;
+    } catch (err) {
+      document.getElementById("regResult").textContent =
+        err.response?.data.detail || "Erro ao registrar";
+    }
+  }
+
+  async function login() {
+    const raw = document.getElementById("loginPublicKey").value.trim();
+    if (!raw) return alert("Cole sua chave pública");
+    // Captura incluindo o \n final
+    const match = raw.match(
+      /-----BEGIN PUBLIC KEY-----[\s\S]*?-----END PUBLIC KEY-----\n?/
+    );
+    const publicKey = match ? match[0] : raw;
+
+    console.log("LOGIN publicKey (raw):", JSON.stringify(raw));
+    console.log("LOGIN publicKey (processed):", JSON.stringify(publicKey));
+    try {
+      const resp = await axios.get("/users/by-public-key", {
+        params: { key: publicKey },
+      });
+      const { id } = resp.data;
+      sessionStorage.setItem("user_id", id);
+      sessionStorage.setItem("public_key", publicKey);
+      setAuthHeader(publicKey);
+      document.getElementById(
+        "loginResult"
+      ).textContent = `Bem-vindo, usuário ${id}`;
+    } catch (err) {
+      document.getElementById("loginResult").textContent =
+        err.response?.data.detail || "Usuário não encontrado";
+    }
+  }
+
+  // Ao carregar a página, se já houver public_key, configura header
+  document.addEventListener("DOMContentLoaded", () => {
+    const storedKey = sessionStorage.getItem("public_key");
+    if (storedKey) setAuthHeader(storedKey);
+  });
+</script>
+{% endblock %}

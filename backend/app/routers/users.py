@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from schemas.user import UserCreate, UserRead
-from services.user_service import insert_user, get_user_by_id
+from services.user_service import insert_user, get_user_by_id, get_user_by_public_key
 from ecdsa import SigningKey
+from routers.dependencies import get_current_user
 
 router = APIRouter()
+
 
 @router.post("/register", response_model=dict)
 def register_user(payload: UserCreate):
@@ -14,13 +16,22 @@ def register_user(payload: UserCreate):
     public_key_pem = vk.to_pem().decode()
 
     # Inserir no banco de dados
-    user_id = insert_user(payload.name, public_key_pem)
+    user_id = insert_user(payload.name, public_key_pem.strip())
 
     return {
         "user_id": user_id,
         "public_key": public_key_pem,
-        "private_key": private_key_pem
+        "private_key": private_key_pem,
     }
+
+
+@router.get("/by-public-key", response_model=UserRead)
+def get_user_by_public_key_endpoint(key: str):
+    user = get_user_by_public_key(key)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    return user
+
 
 @router.get("/{user_id}", response_model=UserRead)
 def get_user(user_id: int):

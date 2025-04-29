@@ -2,9 +2,11 @@ from fastapi import APIRouter, Depends, Body, HTTPException
 from schemas.transaction import SignData, TransactionData
 from core.block_class import Block, Transaction
 from services.blockchain_service import get_blockchain
+from routers.dependencies import get_current_user
 from ecdsa import SigningKey
 
 router = APIRouter()
+
 
 @router.post("/sign", response_model=dict)
 def sign_transaction(data: SignData):
@@ -14,6 +16,7 @@ def sign_transaction(data: SignData):
     sk = SigningKey.from_pem(data.private_key.encode())
     signature = sk.sign(data.tx_data.encode()).hex()
     return {"signature": signature}
+
 
 @router.post("/send", response_model=dict)
 def send_transaction(tx: TransactionData, blockchain=Depends(get_blockchain)):
@@ -26,19 +29,20 @@ def send_transaction(tx: TransactionData, blockchain=Depends(get_blockchain)):
     blockchain.add_transaction(transaction)
     return {"message": "Transação adicionada ao pool"}
 
-@router.post("/mine", response_model=dict)
+
+@router.post("/mine", response_model=dict, dependencies=[Depends(get_current_user)])
 def mine_block(blockchain=Depends(get_blockchain)):
     """
     RF06: Mineração de Blocos
     """
-    #blockchain em Node8000 usa attribute transaction_pool
-    if not getattr(blockchain, 'transaction_pool', None):
+    # blockchain em Node8000 usa attribute transaction_pool
+    if not getattr(blockchain, "transaction_pool", None):
         raise HTTPException(status_code=400, detail="Nenhuma transação para minerar")
     block = blockchain.mine_block()
     return {"message": "Bloco minerado", "block": block.to_dict()}
 
 
-@router.get("/chain")
+@router.get("/chain", dependencies=[Depends(get_current_user)])
 def get_chain(blockchain=Depends(get_blockchain)):
     return [block.to_dict() for block in blockchain.blocks]
 
@@ -74,16 +78,14 @@ def import_chain(received_chain: list = Body(...), blockchain=Depends(get_blockc
             timestamp=b["timestamp"],
             previous_hash=b["previous_hash"],
             transactions=transactions,
-            nonce=b.get("nonce", 0)
+            nonce=b.get("nonce", 0),
         )
         new_chain.append(new_block)
 
-    #verifica validade da nova cadeia
+    # verifica validade da nova cadeia
     if not blockchain.is_chain_valid(new_chain):
         raise HTTPException(status_code=400, detail="Cadeia recebida é inválida")
 
     blockchain.blocks = new_chain
     blockchain.save()
     return {"message": "Cadeia importada com sucesso"}
-
-

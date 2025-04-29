@@ -1,13 +1,14 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from schemas.token import TokenMint, TokenRead
 from services.token_service import insert_token, get_token_by_id
 from services.artwork_service import get_artwork_by_id
+from routers.dependencies import get_current_user
 from services.user_service import get_user_by_id
 
 router = APIRouter()
 
 
-@router.post("/mint", response_model=dict)
+@router.post("/mint", response_model=dict, dependencies=[Depends(get_current_user)])
 def mint_token(payload: TokenMint):
     """
     RF07: Emissão de Token
@@ -22,7 +23,9 @@ def mint_token(payload: TokenMint):
     return {"token_id": token_id, "status": "available"}
 
 
-@router.get("/{token_id}", response_model=TokenRead)
+@router.get(
+    "/{token_id}", response_model=TokenRead, dependencies=[Depends(get_current_user)]
+)
 def get_token(token_id: int):
     """
     RF10: Consulta de Token

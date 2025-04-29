@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Request, Depends
 import requests
 from services.blockchain_service import get_blockchain
+from routers.dependencies import get_current_user
 from core.block_class import Block, Transaction
 
 router = APIRouter()
 
 
-@router.post("/register", response_model=dict)
+@router.post("/register", response_model=dict, dependencies=[Depends(get_current_user)])
 def register_peer(request: Request, peer_url: str):
     """
     RF12: Registro de Peer
@@ -18,7 +19,7 @@ def register_peer(request: Request, peer_url: str):
     return {"peers": list(peers)}
 
 
-@router.get("", response_model=dict)
+@router.get("", response_model=dict, dependencies=[Depends(get_current_user)])
 def list_peers(request: Request):
     """
     Lista peers registrados
@@ -26,7 +27,7 @@ def list_peers(request: Request):
     return {"peers": list(request.app.state.peers)}
 
 
-@router.get("/sync", response_model=dict)
+@router.get("/sync", response_model=dict, dependencies=[Depends(get_current_user)])
 def sync_peers(request: Request, blockchain=Depends(get_blockchain)):
     """
     RF13: Sincronização com Peers
