@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Body, HTTPException
 from schemas.transaction import SignData, TransactionData
-from core.block_class import Block, Transaction
+from core.block_class import Block
 from services.blockchain_service import get_blockchain
 from services.user_service import get_user_by_id, update_user_wallet  # Import correto
 from services.artwork_service import get_artwork_by_id  # Ajuste necessário

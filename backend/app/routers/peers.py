@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Depends
 import requests
 from services.blockchain_service import get_blockchain
-from core.block_class import Block, Transaction
+from core.block_class import Block
 
 router = APIRouter()
 

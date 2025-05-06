@@ -1,61 +1,39 @@
 import hashlib
 import json
 from ecdsa import VerifyingKey, BadSignatureError
-
+from datetime import datetime
 import hashlib
 import json
 from ecdsa import VerifyingKey, BadSignatureError
 
 
-class Transaction:
-    def __init__(self, sender, recipient, amount, signature=None, public_key=None, data=None):
-        self.sender = sender
-        self.recipient = recipient
-        self.amount = amount
-        self.signature = signature
-        self.public_key = public_key
-        self.data = data  # agora está definido corretamente
+class ArtworkRecord:
+    def __init__(self, artwork_id, title, description, author_id, author_name, file_hash, timestamp=None):
+        self.artwork_id = artwork_id
+        self.title = title
+        self.description = description
+        self.author_id = author_id
+        self.author_name = author_name
+        self.file_hash = file_hash
+        self.timestamp = timestamp or datetime.utcnow().isoformat()
 
     def to_dict(self):
         return {
-            "sender": self.sender,
-            "recipient": self.recipient,
-            "amount": self.amount,
-            "signature": self.signature,
-            "public_key": self.public_key,
-            "data": self.data,
+            "artwork_id": self.artwork_id,
+            "title": self.title,
+            "description": self.description,
+            "author_id": self.author_id,
+            "author_name": self.author_name,
+            "file_hash": self.file_hash,
+            "timestamp": self.timestamp,
         }
-
-    def to_sign_string(self):
-        amt = int(self.amount) if self.amount == int(self.amount) else self.amount
-        return f'{{"sender":"{self.sender}","recipient":"{self.recipient}","amount":{amt}}}'
-
-    def is_valid(self):
-        if not self.signature or not self.public_key:
-            return False
-        try:
-            tx_data_json = self.to_sign_string()
-            print("[VALIDAÇÃO] dados para verificação:", tx_data_json)
-            vk = VerifyingKey.from_pem(self.public_key.encode())
-            vk.verify(bytes.fromhex(self.signature), tx_data_json.encode())
-            return True
-        except BadSignatureError:
-            print("[VALIDAÇÃO] Signature verification failed")
-            return False
-        except Exception as e:
-            print("[VALIDAÇÃO] Exceção inesperada:", e)
-            return False
-
-
-
+    
 class Block:
-    def __init__(
-        self, index, timestamp, previous_hash, transactions, nonce=0, hash=None
-    ):
+    def __init__(self, index, timestamp, previous_hash, artworks, nonce=0, hash=None):
         self.index = index
         self.timestamp = timestamp
         self.previous_hash = previous_hash
-        self.transactions = transactions  # Lista de Transaction
+        self.artworks = artworks  # Lista de ArtworkRecord
         self.nonce = nonce
         self.hash = hash or self.calculate_hash()
 
@@ -64,7 +42,7 @@ class Block:
             "index": self.index,
             "timestamp": self.timestamp,
             "previous_hash": self.previous_hash,
-            "transactions": [tx.to_dict() for tx in self.transactions],
+            "artworks": [art.to_dict() for art in self.artworks],
             "nonce": self.nonce,
         }
         block_string = json.dumps(data, sort_keys=True)
@@ -81,7 +59,7 @@ class Block:
             "index": self.index,
             "timestamp": self.timestamp,
             "previous_hash": self.previous_hash,
-            "transactions": [tx.to_dict() for tx in self.transactions],
+            "artworks": [art.to_dict() for art in self.artworks],
             "nonce": self.nonce,
             "hash": self.hash,
         }

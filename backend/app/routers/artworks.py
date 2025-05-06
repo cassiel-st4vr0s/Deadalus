@@ -6,10 +6,14 @@ from typing import Optional, List
 from schemas.artwork import ArtworkRead
 from services.artwork_service import insert_artwork, get_artwork_by_id, list_artworks, get_artworks_by_author_id, get_artwork_with_token
 from services.user_service import get_user_by_id
+from core.block_class import ArtworkRecord
+from core.blockchain import Blockchain
 
 router = APIRouter()
 UPLOAD_DIR = "uploads/previews"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+blockchain = Blockchain()
 
 @router.post("/", response_model=dict)
 def create_artwork(
@@ -45,8 +49,22 @@ def create_artwork(
             author_name= author["name"],
         )
 
+        
+        # 4. Criar o ArtworkRecord
+        artwork_record = ArtworkRecord(
+            artwork_id=artwork_id,
+            title=title,
+            description=description,
+            author_id=author_id,
+            author_name=author["name"],
+            file_hash=file_hash
+        )
+
+        # 5. Adicionar o registro de obra à blockchain
+        blockchain.add_artwork(artwork_record)
+
         return {
-            "message": "Obra criada com sucesso (registrada apenas no banco de dados)",
+            "message": "Obra criada com sucesso e registrada na blockchain",
             "artwork_id": artwork_id,
         }
 
