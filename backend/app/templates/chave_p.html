@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Chave Privada{% endblock %}
+{% block content %}
+<h3 class="font-semibold">3. Recuperar Chave Privada</h3>
+<input type="email" id="email" placeholder="Digite seu e-mail" class="w-full border p-2 mt-2" />
+
+<input type="password" id="password" placeholder="Digite sua senha" class="w-full border p-2 mt-2" />
+
+<button onclick="getPrivateKey()" class="bg-blue-600 text-white px-4 py-2 rounded mt-2">
+  Recuperar Chave Privada
+</button>
+
+<textarea id="privateKeyOutput" placeholder="Sua chave privada aparecerá aqui" class="w-full border p-2 mt-2" rows="4"
+  readonly></textarea>
+
+<button onclick="copyPrivateKey()" class="bg-green-600 text-white px-4 py-2 rounded mt-2">
+  Copiar Chave Privada
+</button>
+
+<pre id="privateKeyResult" class="bg-gray-100 p-2 rounded mt-2"></pre>
+
+<script>
+  async function getPrivateKey() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    if (!email || !password) {
+      alert("Informe e-mail e senha.");
+      return;
+    }
+
+    try {
+      const response = await axios.post("/users/private_key", {
+        email: email,
+        password: password,
+      });
+
+      // Corrigir para o id correto
+      document.getElementById("privateKeyOutput").value = response.data.private_key;
+    } catch (err) {
+      document.getElementById("privateKeyResult").textContent =
+        err.response?.data?.detail || "Erro ao obter chave privada.";
+    }
+  }
+
+  function copyPrivateKey() {
+    const privateKey = document.getElementById("privateKeyOutput");
+    privateKey.select();
+    privateKey.setSelectionRange(0, 99999); // Para dispositivos móveis
+    document.execCommand("copy");
+    alert("Chave privada copiada!");
+  }
+
+
+  window.onload = async function () {
+    await loadArtworks();
+  };
+</script>
+{% endblock %}

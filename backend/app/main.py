@@ -41,6 +41,7 @@ TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 # Home Page
@@ -74,17 +75,31 @@ def chain_view(request: Request):
 def token_view(request: Request):
     return templates.TemplateResponse("token_view.html", {"request": request})
 
+@app.get("/artworks_view", include_in_schema=False)
+def artworks_view(request: Request):
+    return templates.TemplateResponse("artworks.html", {"request": request})
+
+@app.get("/artworks/{artwork_id}", include_in_schema=False)
+def artwork_detail_view(artwork_id: int, request: Request):
+    return templates.TemplateResponse("artwork_detail.html", {
+        "request": request,
+        "artwork_id": artwork_id  # será usado no JavaScript da página
+    })
+
+@app.get("/chave", include_in_schema=False)
+def chavep(request: Request):
+    return templates.TemplateResponse("chave_p.html", {"request": request})
 
 # Health Check
 @app.get("/health", tags=["status"])
 def health_check():
     return {"status": "ok", "blocks": len(app.state.blockchain.blocks)}
 
-
 # Routers
 app.include_router(users_router.router, prefix="/users", tags=["users"])
 app.include_router(artworks_router.router, prefix="/artworks", tags=["artworks"])
 app.include_router(tokens_router.router, prefix="/tokens", tags=["tokens"])
+app.include_router(tokens_router.router, prefix="/chave", tags=["chave"])
 app.include_router(
     transaction_router.router, prefix="/transaction", tags=["transaction"]
 )

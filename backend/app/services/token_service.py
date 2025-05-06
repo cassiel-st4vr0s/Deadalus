@@ -69,3 +69,32 @@ def get_token_by_id(token_id: int) -> Optional[dict]:
             "issued_at": row[5],
         }
     return None
+
+def get_token_by_artwork_id(artwork_id: int) -> Optional[dict]:
+    """
+    Busca um token associado a uma obra. Retorna dicionário ou None.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT id, artwork_id, owner_id, price_tokens, status, issued_at
+        FROM tokens
+        WHERE artwork_id = ?
+        LIMIT 1
+        """,
+        (artwork_id,),
+    )
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return {
+            "id": row[0],
+            "artwork_id": row[1],
+            "owner_id": row[2],
+            "price_tokens": row[3],
+            "status": row[4],
+            "issued_at": row[5],
+        }
+    return None
+

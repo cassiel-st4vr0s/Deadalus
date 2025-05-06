@@ -12,3 +12,4 @@ class TokenRead(BaseModel):
     owner_id: int
     status: str
     issued_at: str
+    price_tokens: int

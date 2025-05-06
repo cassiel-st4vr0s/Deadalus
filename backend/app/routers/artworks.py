@@ -1,15 +1,13 @@
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form
 import hashlib
-import json
-from typing import Optional, List
-from schemas.artwork import ArtworkRead
-from services.artwork_service import insert_artwork, get_artwork_by_id, list_artworks, get_artworks_by_author_id
 import os
 from uuid import uuid4
+from typing import Optional, List
+from schemas.artwork import ArtworkRead
+from services.artwork_service import insert_artwork, get_artwork_by_id, list_artworks, get_artworks_by_author_id, get_artwork_with_token
+from services.user_service import get_user_by_id
 
 router = APIRouter()
-
-
 UPLOAD_DIR = "uploads/previews"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -21,48 +19,39 @@ def create_artwork(
     author_id: int = Form(...),
 ):
     try:
-        # Ler o conteúdo do arquivo
+        # 1. Processar o arquivo
         content = file.file.read()
-
-        # Calcular o hash do conteúdo
         file_hash = hashlib.sha256(content).hexdigest()
 
-        # Salvar o arquivo com nome único
         ext = os.path.splitext(file.filename)[1].lower()
         unique_filename = f"{uuid4().hex}{ext}"
-        save_path = os.path.join(UPLOAD_DIR, unique_filename)
+        save_path = os.path.join(UPLOAD_DIR, unique_filename).replace("\\", "/")
         with open(save_path, "wb") as f:
             f.write(content)
 
-        # Inserir no banco de dados com o caminho do preview
+        # 2. Verificar se autor existe
+        author = get_user_by_id(author_id)
+
+        if not author:
+            raise HTTPException(status_code=404, detail="Autor não encontrado")
+
+        # 3. Inserir obra no banco de dados (sem blockchain)
         artwork_id = insert_artwork(
             author_id=author_id,
             file_hash=file_hash,
             title=title,
             description=description,
-            preview_path=save_path  # novo campo
-        )
-
-        # Preparar os dados para assinar na blockchain
-        tx_data = json.dumps(
-            {
-                "file_hash": file_hash,
-                "title": title,
-                "description": description,
-                "author_id": author_id
-            },
-            sort_keys=True,
-            separators=(",", ":"),
+            preview_path=save_path,
+            author_name= author["name"],
         )
 
         return {
+            "message": "Obra criada com sucesso (registrada apenas no banco de dados)",
             "artwork_id": artwork_id,
-            "tx_data": tx_data
         }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 
 @router.get("/{artwork_id}", response_model=ArtworkRead)
@@ -74,19 +63,18 @@ def get_artwork(artwork_id: int):
 
 @router.get("/author/{author_id}", response_model=List[ArtworkRead])
 def get_artworks_by_author(author_id: int):
-    """
-    Retorna todas as obras de um autor especificado pelo `author_id`.
-    """
     artworks = get_artworks_by_author_id(author_id)
     if not artworks:
         raise HTTPException(status_code=404, detail="Nenhuma obra encontrada para este autor")
     return artworks
 
-
 @router.get("/", response_model=List[ArtworkRead])
 def list_all_artworks(
+    title: Optional[str] = Query(None),
     author_id: Optional[int] = Query(None),
     date_from: Optional[str] = Query(None),
     date_to: Optional[str] = Query(None),
 ):
-    return list_artworks(author_id, date_from, date_to)
+    return list_artworks(title, author_id, date_from, date_to)
+
+

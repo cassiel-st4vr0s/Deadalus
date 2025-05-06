@@ -5,14 +5,17 @@ class ArtworkCreate(BaseModel):
     title: str = Field(..., max_length=200)
     description: str
     author_id: int = Field(..., gt=0)
+    
 
 
 class ArtworkRead(BaseModel):
     id: int
     author_id: int
+    author_name: str
     file_hash: str
     title: str
     description: str
     created_at: str
+    preview_path: str
     class Config:
         orm_mode = True

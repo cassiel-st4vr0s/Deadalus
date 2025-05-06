@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Galeria de Obras{% endblock %}
+
+{% block content %}
+<h2 class="text-xl font-semibold mb-6">🎨 Galeria de Obras</h2>
+
+<div class="mb-6 flex flex-wrap gap-4">
+  <input 
+    type="text" 
+    id="searchInput" 
+    placeholder="Buscar por título..." 
+    class="flex-1 border p-2 rounded"
+  >
+  <select id="authorFilter" class="border p-2 rounded">
+    <option value="">Todos os autores</option>
+  </select>
+  <button 
+    onclick="loadArtworks()" 
+    class="bg-teal-600 text-black px-4 py-2 rounded"
+  >
+    Filtrar
+  </button>
+</div>
+
+<div id="loadingIndicator" class="text-center py-4 hidden">
+  <p>Carregando obras...</p>
+</div>
+
+<div id="artworksGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <!-- Obras serão carregadas aqui via JavaScript -->
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    await loadAuthors();
+    await loadArtworks();
+  });
+
+  async function loadAuthors() {
+    try {
+      const response = await axios.get('/users');
+      const select = document.getElementById('authorFilter');
+      
+      response.data.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user.id;
+        option.textContent = user.name;
+        select.appendChild(option);
+      });
+    } catch (error) {
+      console.error("Erro ao carregar autores:", error);
+    }
+  }
+
+  async function loadArtworks() {
+    const searchTerm = document.getElementById('searchInput').value;
+    const authorId = document.getElementById('authorFilter').value;
+    
+    const grid = document.getElementById('artworksGrid');
+    const loader = document.getElementById('loadingIndicator');
+    
+    grid.innerHTML = '';
+    loader.classList.remove('hidden');
+
+    try {
+      let url = '/artworks';
+      const params = new URLSearchParams();
+      
+      if (searchTerm) params.append('title', searchTerm);
+      if (authorId) params.append('author_id', authorId);
+      
+      if (params.toString()) url += `?${params.toString()}`;
+      
+      const response = await axios.get(url);
+      const artworks = response.data;
+
+      if (artworks.length === 0) {
+        grid.innerHTML = '<p class="col-span-3 text-center py-8">Nenhuma obra encontrada</p>';
+        return;
+      }
+
+      grid.innerHTML = artworks.map(artwork => `
+      <div class="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow bg-white">
+        <div class="h-full flex flex-col">
+          <!-- Imagem (tamanho reduzido) -->
+          ${artwork.preview_path ? `
+            <img src="/${artwork.preview_path}" 
+                class="w-full h-40 object-contain border-b"
+                alt="${artwork.title}">
+          ` : ''}
+          
+          <!-- Conteúdo do card -->
+          <div class="p-4 flex-grow flex flex-col">
+            <h3 class="font-semibold text-lg line-clamp-1">${artwork.title}</h3>
+            <p class="text-sm text-gray-600 mt-1">Autor: ${artwork.author_name || 'Desconhecido'}</p>
+            
+            <p class="text-sm mt-2 text-gray-700 line-clamp-2 flex-grow">
+              ${artwork.description || 'Sem descrição disponível'}
+            </p>
+            
+            <div class="mt-4 flex justify-between items-center">
+              <span class="text-xs text-gray-500">ID: ${artwork.id}</span>
+              <a href="/artworks/${artwork.id}" 
+                class="text-teal-600 hover:text-teal-800 text-sm font-medium transition-colors">
+                Ver detalhes →
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    } catch (error) {
+      console.error("Erro ao carregar obras:", error);
+      grid.innerHTML = '<p class="col-span-3 text-center py-8 text-red-500">Erro ao carregar obras</p>';
+    } finally {
+      loader.classList.add('hidden');
+    }
+  }
+</script>
+{% endblock %}

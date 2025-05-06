@@ -11,6 +11,7 @@ import secrets
 from cryptography.fernet import Fernet
 import base64
 import hashlib
+from fastapi import Body
 
 router = APIRouter()
 
@@ -110,20 +111,32 @@ def get_user(user_id: int):
     return user
 
 @router.post("/private_key", response_model=dict)
-def get_private_key(email: str, password: str):
-    user = get_user_by_email(email)
+def get_private_key(payload: UserLogin):
+    user = get_user_by_email(payload.email)
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
 
-    if not verify_password(password, user.password_hash):
+    if not verify_password(payload.password, user["password_hash"]):
         raise HTTPException(status_code=403, detail="Senha incorreta")
 
     try:
-        password_key = hashlib.sha256(password.encode()).digest()
+        print("Usuário encontrado:", user)
+
+        password_key = hashlib.sha256(payload.password.encode()).digest()
         fernet_key = base64.urlsafe_b64encode(password_key[:32])
+        print("Fernet Key (base64):", fernet_key)
+
         fernet = Fernet(fernet_key)
 
-        private_key_pem = fernet.decrypt(user.private_key_encrypted.encode()).decode()
+        encrypted_private_key = user["private_key_encrypted"]
+        print("Chave Privada Criptografada (Base64):", encrypted_private_key)
+        
+
+
+        private_key_pem = fernet.decrypt(encrypted_private_key.encode()).decode()
+
         return {"private_key": private_key_pem}
-    except Exception:
+
+    except Exception as e:
+        print("Erro ao descriptografar a chave privada:", str(e))
         raise HTTPException(status_code=500, detail="Erro ao descriptografar a chave privada")

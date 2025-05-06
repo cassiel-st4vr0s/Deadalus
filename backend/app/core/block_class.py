@@ -2,14 +2,19 @@ import hashlib
 import json
 from ecdsa import VerifyingKey, BadSignatureError
 
+import hashlib
+import json
+from ecdsa import VerifyingKey, BadSignatureError
+
 
 class Transaction:
-    def __init__(self, sender, recipient, amount, signature=None, public_key=None):
+    def __init__(self, sender, recipient, amount, signature=None, public_key=None, data=None):
         self.sender = sender
         self.recipient = recipient
         self.amount = amount
         self.signature = signature
         self.public_key = public_key
+        self.data = data  # agora está definido corretamente
 
     def to_dict(self):
         return {
@@ -18,10 +23,10 @@ class Transaction:
             "amount": self.amount,
             "signature": self.signature,
             "public_key": self.public_key,
+            "data": self.data,
         }
 
     def to_sign_string(self):
-        # garante exatamente o mesmo formato e ordem do JSON assinado
         amt = int(self.amount) if self.amount == int(self.amount) else self.amount
         return f'{{"sender":"{self.sender}","recipient":"{self.recipient}","amount":{amt}}}'
 
@@ -40,6 +45,7 @@ class Transaction:
         except Exception as e:
             print("[VALIDAÇÃO] Exceção inesperada:", e)
             return False
+
 
 
 class Block:

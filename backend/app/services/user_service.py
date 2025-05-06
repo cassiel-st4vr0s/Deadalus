@@ -45,7 +45,10 @@ def get_user_by_email(email: str) -> Optional[dict]:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
-    cursor.execute("SELECT id, name, email, password_hash, wallet_balance FROM users WHERE email = ?", (email,))
+    cursor.execute(
+        "SELECT id, name, email, password_hash, wallet_balance, private_key_encrypted FROM users WHERE email = ?",
+        (email,)
+    )
     user = cursor.fetchone()
     
     conn.close()
@@ -56,10 +59,12 @@ def get_user_by_email(email: str) -> Optional[dict]:
             "name": user[1],
             "email": user[2],
             "password_hash": user[3],
-            "wallet_balance": user[4],  
+            "wallet_balance": user[4],
+            "private_key_encrypted": user[5],  # <- Adicionado
         }
     else:
         return None
+
     
 def update_user_wallet(user_id: int, new_balance: int):
     conn = sqlite3.connect(DB_PATH)
