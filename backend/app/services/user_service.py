@@ -5,16 +5,34 @@ from datetime import datetime, timezone
 
 DB_PATH = Path(__file__).resolve().parents[1] / "database.sqlite3"
 
-def insert_user(name: str, public_key: str, private_key_encrypted: str, email: str, password_hash: str) -> int:
+
+def insert_user(
+    name: str,
+    public_key: str,
+    private_key_encrypted: str,
+    email: str,
+    password_hash: str,
+) -> int:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     now_utc_iso = datetime.now(timezone.utc).isoformat()
-    
-    cursor.execute("""
+
+    cursor.execute(
+        """
         INSERT INTO users (name, public_key, private_key_encrypted, email, password_hash, registered_at, wallet_balance)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (name, public_key, private_key_encrypted, email, password_hash, now_utc_iso, 100))
-    
+    """,
+        (
+            name,
+            public_key,
+            private_key_encrypted,
+            email,
+            password_hash,
+            now_utc_iso,
+            100,
+        ),
+    )
+
     user_id = cursor.lastrowid
     conn.commit()
     conn.close()
@@ -24,7 +42,10 @@ def insert_user(name: str, public_key: str, private_key_encrypted: str, email: s
 def get_user_by_id(user_id: int) -> Optional[dict]:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT id, name, public_key, registered_at, wallet_balance FROM users WHERE id = ?", (user_id,))
+    cursor.execute(
+        "SELECT id, name, public_key, registered_at, wallet_balance FROM users WHERE id = ?",
+        (user_id,),
+    )
     row = cursor.fetchone()
     conn.close()
     if row:
@@ -33,9 +54,10 @@ def get_user_by_id(user_id: int) -> Optional[dict]:
             "name": row[1],
             "public_key": row[2],
             "registered_at": row[3],
-            "wallet_balance": row[4]  # Inclui o saldo da carteira
+            "wallet_balance": row[4],  # Inclui o saldo da carteira
         }
     return None
+
 
 def get_user_by_email(email: str) -> Optional[dict]:
     """
@@ -44,15 +66,15 @@ def get_user_by_email(email: str) -> Optional[dict]:
     """
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    
+
     cursor.execute(
         "SELECT id, name, email, password_hash, wallet_balance, private_key_encrypted FROM users WHERE email = ?",
-        (email,)
+        (email,),
     )
     user = cursor.fetchone()
-    
+
     conn.close()
-    
+
     if user:
         return {
             "id": user[0],
@@ -65,13 +87,15 @@ def get_user_by_email(email: str) -> Optional[dict]:
     else:
         return None
 
-    
+
 def update_user_wallet(user_id: int, new_balance: int):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
         UPDATE users SET wallet_balance = ? WHERE id = ?
-    """, (new_balance, user_id))
+    """,
+        (new_balance, user_id),
+    )
     conn.commit()
     conn.close()
-
